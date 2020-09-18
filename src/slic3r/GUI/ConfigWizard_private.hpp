@@ -19,6 +19,8 @@
 #include <wx/listbox.h>
 #include <wx/checklst.h>
 #include <wx/radiobut.h>
+#include <wx/html/htmlwin.h>
+#include <wx/webview.h>
 
 #include "libslic3r/PrintConfig.hpp"
 #include "libslic3r/PresetBundle.hpp"
@@ -329,7 +331,10 @@ struct PageMaterials: ConfigWizardPage
     bool presets_loaded;
 
     wxFlexGridSizer *grid;
-    wxStaticText *compatible_printers;
+    //wxStaticText *compatible_printers;
+    wxHtmlWindow* html_window;
+    wxWebView * webview_window;
+
     int compatible_printers_width = { 100 };
     std::string empty_printers_label;
     bool first_paint = { false };
@@ -345,7 +350,7 @@ struct PageMaterials: ConfigWizardPage
     void select_material(int i);
     void select_all(bool select);
     void clear();
-    void prepare_compatible_printers_label();
+    void set_compatible_printers_html_window(const std::vector<std::string>& printer_names);
     void clear_compatible_printers_label();
 
     void on_paint();

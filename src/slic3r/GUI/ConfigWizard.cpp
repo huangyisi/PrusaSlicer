@@ -733,13 +733,7 @@ void PageMaterials::set_compatible_printers_html_window(const std::vector<std::s
         , bgr_clr_str
         , first_line
         , second_line);
-    /*
-            "<tr>"
-                "<th>Firstname</th>"
-                "<th>Lastname</th>"
-                "<th>Age</th>"
-            "</tr>"
-            */
+
     for (int i = 0; i < printer_names.size(); ++i)
     {
         text += wxString::Format("<td>%s</td>", boost::nowide::widen(printer_names[i]));
@@ -993,7 +987,6 @@ void PageMaterials::update_lists(int sel_printer, int sel_type, int sel_vendor)
 					//size_t printer_counter = materials->get_printer_counter(p);
 					int cur_i = list_profile->find(p->alias);
 					if (cur_i == wxNOT_FOUND)
-						//cur_i = list_profile->append(p->alias + " " + std::to_string(printer_counter)/*+ (omnipresent ? "" : " ONLY SOME PRINTERS")*/, &p->alias);
 						cur_i = list_profile->append(p->alias + (materials->get_omnipresent(p) ? "" : " *"), &p->alias);
 					else
 						was_checked = list_profile->IsChecked(cur_i);
@@ -1650,6 +1643,7 @@ void Materials::clear()
     presets.clear();
     types.clear();
 	printers.clear();
+    compatibility_counter.clear();
 }
 
 const std::string& Materials::appconfig_section() const
@@ -1943,12 +1937,44 @@ void ConfigWizard::priv::update_materials(Technology technology)
 							if (!filament.alias.empty())
 								aliases_fff[filament.alias].insert(filament.name); 
 						} 
-						filaments.add_printer_counter(&filament);
 						filaments.add_printer(&printer);
                     }
 				}
 				
             }
+        }
+        // count compatible printers
+        for (const auto& preset : filaments.presets) {
+
+            const auto filter = [preset](const std::pair<std::string, size_t> element) {
+                return preset.first->alias == element.first;
+            };
+            if (std::find_if(filaments.compatibility_counter.begin(), filaments.compatibility_counter.end(), filter) != filaments.compatibility_counter.end()) {
+                continue;
+            }
+            std::vector<size_t> idx_with_same_alias;
+            for (size_t i = 0; i < filaments.presets.size(); ++i) {
+                if (preset.first->alias == filaments.presets[i].first->alias)
+                    idx_with_same_alias.push_back(i);
+            }
+            size_t counter = 0;
+            for (const auto& printer : filaments.printers) {
+                if (!(*printer).is_visible || (*printer).printer_technology() != ptFFF)
+                    continue;
+                bool compatible = false;
+                // Test otrher materials with same alias
+                for (size_t i = 0; i < idx_with_same_alias.size() && !compatible; ++i) {
+                    const Preset& prst = *(filaments.presets[idx_with_same_alias[i]].first);
+                    const Preset& prntr = *printer;
+                    if (is_compatible_with_printer(PresetWithVendorProfile(prst, prst.vendor), PresetWithVendorProfile(prntr, prntr.vendor))) {
+                        compatible = true;
+                        break;
+                    }
+                }
+                if (compatible)
+                    counter++;
+            }
+            filaments.compatibility_counter.emplace_back(preset.first->alias, counter);
         }
     }
 
@@ -1975,11 +2001,43 @@ void ConfigWizard::priv::update_materials(Technology technology)
                             if (!material.alias.empty())
                                 aliases_sla[material.alias].insert(material.name);
                         }
-                        sla_materials.add_printer_counter(&material);
                         sla_materials.add_printer(&printer);
                     }
                 }
             }
+        }
+        // count compatible printers        
+        for (const auto& preset : sla_materials.presets) {
+            
+            const auto filter = [preset](const std::pair<std::string, size_t> element) {
+                return preset.first->alias == element.first;
+            };
+            if (std::find_if(sla_materials.compatibility_counter.begin(), sla_materials.compatibility_counter.end(), filter) != sla_materials.compatibility_counter.end()) {
+                continue;
+            }
+            std::vector<size_t> idx_with_same_alias;
+            for (size_t i = 0; i < sla_materials.presets.size(); ++i) {
+                if(preset.first->alias == sla_materials.presets[i].first->alias)
+                    idx_with_same_alias.push_back(i);
+            }
+            size_t counter = 0;
+            for (const auto& printer : sla_materials.printers) {
+                if (!(*printer).is_visible || (*printer).printer_technology() != ptSLA)
+                    continue;
+                bool compatible = false;
+                // Test otrher materials with same alias
+                for (size_t i = 0; i < idx_with_same_alias.size() && !compatible; ++i) {
+                    const Preset& prst = *(sla_materials.presets[idx_with_same_alias[i]].first);
+                    const Preset& prntr = *printer;
+                    if (is_compatible_with_printer(PresetWithVendorProfile(prst, prst.vendor), PresetWithVendorProfile(prntr, prntr.vendor))) {
+                        compatible = true;
+                        break;
+                    }
+                }
+                if (compatible)
+                    counter++;
+            }
+            sla_materials.compatibility_counter.emplace_back(preset.first->alias, counter);
         }
     }
 }

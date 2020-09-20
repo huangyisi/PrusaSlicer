@@ -88,9 +88,10 @@ struct Materials
 {
     Technology technology;
     // use vector for the presets to purpose of save of presets sorting in the bundle
-	// bool is true if material is present in all printers (omnipresent)
 	// size_t is counter of printers compatible with material
     std::vector<std::pair<const Preset*, size_t>> presets;
+    // String is alias of material, size_t number of compatible counters 
+    std::vector<std::pair<std::string, size_t>> compatibility_counter;
     std::set<std::string> types;
 	std::set<const Preset*> printers;
 
@@ -119,20 +120,14 @@ struct Materials
         return ret_vec;
     }
 
-	void add_printer_counter(const Preset* preset) {
-		for (auto it = presets.begin(); it != presets.end(); ++it) {
-			if ((*it).first->alias == preset->alias)
-				(*it).second += 1;
-		}
-	}
+	
 
 	size_t get_printer_counter(const Preset* preset) {
-		size_t highest = 0;
-		for (auto it : presets) {
-			if (it.first->alias == preset->alias && it.second > highest)
-				highest = it.second;
-		}
-		return highest;
+		for (auto it : compatibility_counter) {
+			if (it.first == preset->alias)
+                return it.second;
+        }
+		return 0;
 	}
 
     const std::string& appconfig_section() const;

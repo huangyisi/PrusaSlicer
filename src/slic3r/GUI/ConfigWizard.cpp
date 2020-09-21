@@ -628,9 +628,6 @@ PageMaterials::PageMaterials(ConfigWizard *parent, Materials *materials, wxStrin
     //grid_html->Add(html_window, 0, wxEXPAND);
     //append(grid_html, 1, wxEXPAND);
 
-    //webview_window = wxWebView::New();
-    //webview_window->Create(this, wxID_ANY, wxWebViewDefaultURLStr, wxDefaultPosition,wxSize(60 * em, 20 * em));
-    //append(webview_window, 0, wxEXPAND);
     append(html_window, 0, wxEXPAND);
 
 	list_printer->Bind(wxEVT_LISTBOX, [this](wxCommandEvent& evt) {

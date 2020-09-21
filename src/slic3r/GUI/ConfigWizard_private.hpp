@@ -20,7 +20,6 @@
 #include <wx/checklst.h>
 #include <wx/radiobut.h>
 #include <wx/html/htmlwin.h>
-#include <wx/webview.h>
 
 #include "libslic3r/PrintConfig.hpp"
 #include "libslic3r/PresetBundle.hpp"
@@ -328,7 +327,6 @@ struct PageMaterials: ConfigWizardPage
     wxFlexGridSizer *grid;
     //wxStaticText *compatible_printers;
     wxHtmlWindow* html_window;
-    wxWebView * webview_window;
 
     int compatible_printers_width = { 100 };
     std::string empty_printers_label;

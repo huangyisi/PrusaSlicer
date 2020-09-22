@@ -621,13 +621,8 @@ PageMaterials::PageMaterials(ConfigWizard *parent, Materials *materials, wxStrin
 
     append_spacer(VERTICAL_SPACING);
 
-    //auto grid_html = new wxFlexGridSizer(1, 1, em / 2, em);
-    //grid_html->AddGrowableCol(1, 1);
     html_window = new wxHtmlWindow(this, wxID_ANY, wxDefaultPosition,
         wxSize(60 * em, 20 * em), wxHW_SCROLLBAR_AUTO);
-    //grid_html->Add(html_window, 0, wxEXPAND);
-    //append(grid_html, 1, wxEXPAND);
-
     append(html_window, 0, wxEXPAND);
 
 	list_printer->Bind(wxEVT_LISTBOX, [this](wxCommandEvent& evt) {
@@ -701,20 +696,11 @@ void PageMaterials::reload_presets()
 
 void PageMaterials::set_compatible_printers_html_window(const std::vector<std::string>& printer_names)
 {
-    /*
-    assert(grid->GetColWidths().size() == 4);
-    compatible_printers_width = grid->GetColWidths()[3];
-    empty_printers_label = "Compatible printers:";
-    for (const Preset* printer : materials->printers) {
-        empty_printers_label += "\n";
-    }
-    clear_compatible_printers_label()
-    ;
-    */
-    wxColour bgr_clr = wxSystemSettings::GetColour(wxSYS_COLOUR_MENU);
-    //const auto text_clr = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
-    //const auto text_clr_str = wxString::Format(wxT("#%02X%02X%02X"), text_clr.Red(), text_clr.Green(), text_clr.Blue());
+    //Slic3r::GUI::wxGetApp().dark_mode()
+    const auto bgr_clr = wxSystemSettings::GetColour(Slic3r::GUI::wxGetApp().dark_mode() ? wxSYS_COLOUR_WINDOW : wxSYS_COLOUR_MENU);
     const auto bgr_clr_str = wxString::Format(wxT("#%02X%02X%02X"), bgr_clr.Red(), bgr_clr.Green(), bgr_clr.Blue());
+    const auto text_clr = wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT);
+    const auto text_clr_str = wxString::Format(wxT("#%02X%02X%02X"), text_clr.Red(), text_clr.Green(), text_clr.Blue());
     wxString first_line = L"Profiles marked with * are not compatible with all installed printers.";
     wxString second_line = L"Compatible printers:";
     wxString text = wxString::Format(
@@ -723,11 +709,13 @@ void PageMaterials::set_compatible_printers_html_window(const std::vector<std::s
         "table{border-spacing: 1px;}"
         "</style>"
         "<body bgcolor= %s>"
-        "<font size=\"2\">"
+        "<font color=%s>"
+        "<font size=\"3\">"
         "%s<br /><br />%s"
         "<table>"
         "<tr>"
         , bgr_clr_str
+        , text_clr_str
         , first_line
         , second_line);
 
@@ -741,13 +729,19 @@ void PageMaterials::set_compatible_printers_html_window(const std::vector<std::s
         }
     }
     text += wxString::Format(
-         "</tr>"
+        "</tr>"
         "</table>"
+        "</font>"
         "</font>"
         "</body>"
         "</html>"
              );
     //webview_window->SetPage(text, "");
+    //html_window->SetFont(get_default_font_for_dpi(get_dpi_for_window(this)));
+    wxFont font = get_default_font_for_dpi(get_dpi_for_window(this));
+    const int fs = font.GetPointSize();
+    int size[] = { fs,fs,fs,fs,fs,fs,fs };
+    html_window->SetFonts(font.GetFaceName(), font.GetFaceName(), size);
     html_window->SetPage(text);
 }
 
